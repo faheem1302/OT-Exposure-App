@@ -1,6 +1,6 @@
 # OT/ICS Cybersecurity Exposure Dashboard
 
-> A full-stack threat intelligence platform that discovers, tracks, and visualises internet-facing OT/ICS device exposures across the UAE and GCC region — powered by **Shodan**, **SpiderSilk**, and **Claude AI**.
+> A full-stack threat intelligence platform that discovers, tracks, and visualises internet-facing OT/ICS device exposures across the UAE and GCC region — powered by **Shodan** and **SpiderSilk**
 
 ---
 
@@ -12,7 +12,7 @@ This project aggregates internet-facing industrial control system (ICS/SCADA) ex
 - Internet-exposed PLCs, HMIs, SCADA systems, OT historians, and engineering workstations
 - Exposure by organisation, city, port, and product across UAE + GCC countries
 - Risk scoring based on exposure volume, critical OT protocol ports, and known CVEs
-- Natural language → SQL search interface powered by Claude AI
+- Natural language → SQL search interface
 - Interactive Leaflet map with 14 categorised OT/ICS threat layers
 
 ---
@@ -123,7 +123,7 @@ Python Scripts/
 | Database | PostgreSQL 15 |
 | Backend API | Python 3.11 · FastAPI · asyncpg · uvicorn |
 | ETL / Ingestion | Shodan SDK · requests · pandas · psycopg3 |
-| AI / NL Search | Anthropic Claude API |
+| AI / NL Search | LLM API |
 | Frontend | React 19 · TanStack Query v5 · Axios |
 | Map | Leaflet · react-leaflet · react-leaflet-cluster |
 | Auth | API key header (`X-API-Key`) — SlowAPI rate limiting |
@@ -159,7 +159,7 @@ Each component is independently normalised to 0–100.
 | Page | Description |
 |---|---|
 | **Dashboard** | KPI cards, timeline sparkline, top orgs/ports/cities/products, GCC pie chart, critical IPs |
-| **Search** | Type a plain-English question → Claude generates SQL → results table |
+| **Search** | Type a plain-English question → LLM generates SQL → results table |
 | **Map** | Interactive Leaflet map, 14 OT/ICS category layers, cluster markers, tile switcher |
 
 ### OT/ICS Exposure Categories (Shodan)
@@ -208,7 +208,7 @@ All endpoints require `X-API-Key` header. Interactive docs at `http://localhost:
 | Risk | GET | `/api/risk/top-orgs` | Top orgs by exposure + CVE count |
 | Risk | GET | `/api/risk/critical-ips` | IPs with known CVEs |
 | GCC | GET | `/api/gcc_exposure` | Exposure per GCC country |
-| Search | POST | `/api/search` | NL query → Claude SQL → results |
+| Search | POST | `/api/search` | NL query → SQL → results |
 | SpiderSilk | GET | `/api/spidersilk/assets` | Paginated SpiderSilk assets |
 | SpiderSilk | GET | `/api/spidersilk/summary` | SpiderSilk KPIs |
 | SpiderSilk | GET | `/api/spidersilk/by-country` | Assets per country |
