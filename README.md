@@ -1,6 +1,3 @@
-# OT-Exposure-App
-App that visualises internet-facing OT/ICS device exposures discovered by Shodan and SpiderSilk
-
 # OT/ICS Cybersecurity Exposure Dashboard
 
 > A full-stack threat intelligence platform that discovers, tracks, and visualises internet-facing OT/ICS device exposures across the UAE and GCC region — powered by **Shodan**, **SpiderSilk**, and **Claude AI**.
