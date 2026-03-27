@@ -1,6 +1,6 @@
 # OT/ICS Cybersecurity Exposure Dashboard
 
-> A full-stack threat intelligence platform that discovers, tracks, and visualises internet-facing OT/ICS device exposures across the UAE and GCC region — powered by **Shodan** and **SpiderSilk**
+> A full-stack threat intelligence platform that discovers, tracks, and visualises internet-facing OT/ICS device exposures across the UAE and GCC region — powered by **Shodan**, **SpiderSilk**, and **Claude AI**.
 
 ---
 
@@ -12,7 +12,7 @@ This project aggregates internet-facing industrial control system (ICS/SCADA) ex
 - Internet-exposed PLCs, HMIs, SCADA systems, OT historians, and engineering workstations
 - Exposure by organisation, city, port, and product across UAE + GCC countries
 - Risk scoring based on exposure volume, critical OT protocol ports, and known CVEs
-- Natural language → SQL search interface
+- Natural language → SQL search interface powered by Claude AI
 - Interactive Leaflet map with 14 categorised OT/ICS threat layers
 
 ---
@@ -71,11 +71,12 @@ Shodan API + SpiderSilk API
 ## Repository Structure
 
 ```
-Python Scripts/
+OT-Exposure-App/
 │
 ├── README.md                     # This file
+├── .gitignore
 │
-├── Shodan/                       # Backend (Python · FastAPI · Docker)
+├── backend/                      # Python · FastAPI · Docker
 │   ├── DOCUMENTATION.md
 │   ├── Dockerfile
 │   ├── docker-compose.yml
@@ -101,11 +102,13 @@ Python Scripts/
 │       ├── create_tables.sql
 │       └── create_indexes.sql
 │
-└── React/uae-map-app/            # Frontend (React 19 · TanStack Query · Leaflet)
+└── frontend/                     # React 19 · TanStack Query · Leaflet
     ├── DOCUMENTATION.md
     ├── package.json
     ├── nginx.conf
-    ├── frontend/Dockerfile
+    ├── docker-compose.yml
+    ├── docker/Dockerfile         # Production Nginx image
+    ├── .env.example
     │
     └── src/
         ├── App.js                # Root — nav, routing, top-level data hooks
@@ -123,7 +126,7 @@ Python Scripts/
 | Database | PostgreSQL 15 |
 | Backend API | Python 3.11 · FastAPI · asyncpg · uvicorn |
 | ETL / Ingestion | Shodan SDK · requests · pandas · psycopg3 |
-| AI / NL Search | LLM API |
+| AI / NL Search | Anthropic Claude API |
 | Frontend | React 19 · TanStack Query v5 · Axios |
 | Map | Leaflet · react-leaflet · react-leaflet-cluster |
 | Auth | API key header (`X-API-Key`) — SlowAPI rate limiting |
@@ -159,7 +162,7 @@ Each component is independently normalised to 0–100.
 | Page | Description |
 |---|---|
 | **Dashboard** | KPI cards, timeline sparkline, top orgs/ports/cities/products, GCC pie chart, critical IPs |
-| **Search** | Type a plain-English question → LLM generates SQL → results table |
+| **Search** | Type a plain-English question → Claude generates SQL → results table |
 | **Map** | Interactive Leaflet map, 14 OT/ICS category layers, cluster markers, tile switcher |
 
 ### OT/ICS Exposure Categories (Shodan)
@@ -208,7 +211,7 @@ All endpoints require `X-API-Key` header. Interactive docs at `http://localhost:
 | Risk | GET | `/api/risk/top-orgs` | Top orgs by exposure + CVE count |
 | Risk | GET | `/api/risk/critical-ips` | IPs with known CVEs |
 | GCC | GET | `/api/gcc_exposure` | Exposure per GCC country |
-| Search | POST | `/api/search` | NL query → SQL → results |
+| Search | POST | `/api/search` | NL query → Claude SQL → results |
 | SpiderSilk | GET | `/api/spidersilk/assets` | Paginated SpiderSilk assets |
 | SpiderSilk | GET | `/api/spidersilk/summary` | SpiderSilk KPIs |
 | SpiderSilk | GET | `/api/spidersilk/by-country` | Assets per country |
@@ -307,7 +310,7 @@ All endpoints require `X-API-Key` header. Interactive docs at `http://localhost:
 ### Backend — First-time Setup
 
 ```bash
-cd "Python Scripts/Shodan"
+cd backend
 
 # Create environment file
 cp .env.example .env
@@ -329,7 +332,7 @@ curl -H "X-API-Key: your_dashboard_key" http://localhost:8000/health
 ### Frontend — Development
 
 ```bash
-cd "Python Scripts/React/uae-map-app"
+cd frontend
 
 # Create env file
 cp .env.example .env.development
@@ -344,8 +347,8 @@ npm start
 ### Frontend — Production Docker Build
 
 ```bash
-cd "Python Scripts/React/uae-map-app"
-docker build -f frontend/Dockerfile -t uae-map-frontend .
+cd frontend
+docker build -f docker/Dockerfile -t uae-map-frontend .
 docker run -p 80:80 uae-map-frontend
 ```
 
@@ -418,7 +421,7 @@ Rate limit: **100 requests / minute per IP** — exceeding returns `429 Too Many
 
 ## Data Ingestion Pipeline
 
-The ingestion script (`Shodan/ingestion/ingest.py`) runs in two sequential steps on a **daily cron at 05:00 AM**:
+The ingestion script (`backend/ingestion/ingest.py`) runs in two sequential steps on a **daily cron at 05:00 AM**:
 
 1. **Shodan (async)** — Queries 16 OT/ICS search categories → upserts records into `shodan_exposures` using the Shodan `hash` as the deduplication key
 2. **SpiderSilk (sync/threaded)** — Fetches up to `SS_MAX_PAGES × 100` asset records from `POST /v1/assets` → inserts into `spidersilk_assets`
@@ -433,5 +436,5 @@ async def main():
 
 ## Detailed Documentation
 
-- [Backend Documentation](Shodan/DOCUMENTATION.md) — full API reference, DB schema, Docker services, ingestion details
-- [Frontend Documentation](React/uae-map-app/DOCUMENTATION.md) — component reference, hooks, map config, caching strategy
+- [Backend Documentation](backend/DOCUMENTATION.md) — full API reference, DB schema, Docker services, ingestion details
+- [Frontend Documentation](frontend/DOCUMENTATION.md) — component reference, hooks, map config, caching strategy

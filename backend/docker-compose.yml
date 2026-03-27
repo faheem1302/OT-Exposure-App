@@ -1,0 +1,139 @@
+# =============================================================================
+# OT/ICS Cybersecurity Exposure Dashboard — docker-compose.yml
+# Services: FastAPI app, PostgreSQL 15, pgAdmin 4 (admin profile only)
+# =============================================================================
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Named volumes
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Custom bridge network — services communicate by service name
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Services
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 15
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: shodan_postgres
+    env_file: .env
+    environment:
+      # These mirror the variables in .env — postgres image reads them directly
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Automatically run SQL init scripts on first boot
+      - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/01_create_tables.sql:ro
+      - ./sql/create_indexes.sql:/docker-entrypoint-initdb.d/02_create_indexes.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # FastAPI application
+  # ---------------------------------------------------------------------------
+  fastapi_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shodan_api
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    # Override the CMD to allow passing extra uvicorn flags via environment
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 1
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Shodan ingestion scheduler — runs ShodanAPI.py every day at 05:00 AM
+  # Uses supercronic (cron for containers) so no crontab setup needed
+  # ---------------------------------------------------------------------------
+  shodan_scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shodan_scheduler
+    user: root
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    command: >
+      sh -c "echo '0 5 * * * python /app/ingestion/ingest.py >> /var/log/shodan_cron.log 2>&1'
+      | crontab - && cron -f"
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin 4 — only started when the "admin" profile is active:
+  #   docker compose --profile admin up
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: shodan_pgadmin
+    profiles:
+      - admin
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+# Add pgAdmin data volume (only used when admin profile is active)
+# We declare it at the top-level so it is always defined even when the
+# pgadmin service is not started.
+
+# Note: pgadmin_data must be listed under volumes even though the service
+# is profile-gated, otherwise docker compose will raise a validation error
+# when starting without the admin profile.

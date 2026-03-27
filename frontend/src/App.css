@@ -1,0 +1,278 @@
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #060a10;
+}
+
+/* ── Scanlines overlay on entire viewport ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.03) 3px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Root layout ── */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Subtle blue grid texture behind all content ── */
+.app-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Header ── */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #080c14 0%, #0d1117 60%, #0a0f1e 100%);
+  border-bottom: 1px solid rgba(0, 200, 255, 0.12);
+  padding: 0 20px;
+  height: 60px;
+  flex-shrink: 0;
+  gap: 16px;
+  z-index: 2000;
+  position: relative;
+  box-shadow: 0 1px 24px rgba(0,0,0,0.5), 0 0 40px rgba(0,200,255,0.03);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* White pill behind logo so yellow+black both show on dark bg */
+.header-logo-wrap {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(245,168,0,0.25);
+}
+
+.header-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+
+.header-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(245,168,0,0.4);
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.header-title {
+  font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #F5A800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #8892a4;
+  letter-spacing: 0.8px;
+}
+
+/* ── Stats ── */
+.header-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid rgba(0, 200, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 16px;
+  min-width: 82px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(0, 200, 255, 0.22);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.4), 0 0 10px rgba(0,200,255,0.06);
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: #F5A800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: #8892a4;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-top: 2px;
+}
+
+/* ── Header right: nav + badge container ── */
+.header-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ── Page Nav: glassmorphism pill container ── */
+.page-nav {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 212, 255, 0.03);
+  border: 1px solid rgba(0, 212, 255, 0.12);
+  border-radius: 8px;
+  padding: 3px;
+  backdrop-filter: blur(8px);
+}
+
+/* ── Nav button: base state (inactive) ── */
+.page-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 16px;
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: rgba(160, 180, 210, 0.55);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease;
+  white-space: nowrap;
+  text-transform: uppercase;
+  position: relative;
+}
+
+/* ── Nav button: hover state ── */
+.page-nav-btn:hover {
+  color: rgba(200, 225, 255, 0.85);
+  background: rgba(0, 212, 255, 0.05);
+  border-color: rgba(0, 212, 255, 0.2);
+}
+
+/* ── Nav button: active/selected state ── */
+/* Lit LED strip top border + cyan glow */
+.page-nav-active {
+  color: #00d4ff !important;
+  background: rgba(0, 212, 255, 0.08) !important;
+  border-color: rgba(0, 212, 255, 0.35) !important;
+  box-shadow:
+    0 0 10px rgba(0, 212, 255, 0.12),
+    inset 0 1px 0 rgba(0, 212, 255, 0.4) !important; /* LED strip on top */
+}
+
+/* ── SHODAN badge: premium minimal pill ── */
+
+/* "POWERED BY" micro-label */
+.powered-by {
+  font-size: 9px;
+  color: #7a8599;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* "SHODAN" brand pill */
+.shodan-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ff2d2d;
+  letter-spacing: 2px;
+  background: rgba(255,45,45,0.1);
+  border: 1px solid rgba(255,45,45,0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+/* ── Map wrapper ── */
+.map-wrapper {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Search page animations ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Hover states for search page elements */
+.search-nl-textarea:focus,
+.search-sql-textarea:focus {
+  border-color: rgba(0, 200, 255, 0.35) !important;
+  box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.06) !important;
+}
+
+/* ── Dark Leaflet Popup ── */
+.dark-popup .leaflet-popup-content-wrapper {
+  background: linear-gradient(160deg, #0f0f1e 0%, #1a1a2e 100%);
+  border: 1px solid rgba(245,168,0,0.25);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(245,168,0,0.05);
+  padding: 0;
+  overflow: hidden;
+}
+.dark-popup .leaflet-popup-content {
+  margin: 0;
+  width: 300px !important;
+}
+.dark-popup .leaflet-popup-tip {
+  background: #1a1a2e;
+}
